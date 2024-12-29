@@ -1,9 +1,16 @@
 {
   "name": "toclido",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start:dev": "nodemon --quiet dist/index.js",
+    "dev": "tsup src/index.ts --format esm --watch",
+    "start": "node --quiet dist/index.js",
+    "build": "tsup src/index.ts --format esm"
+  },
+  "bin": {
+    "toclido": "./dist/index.js"
   },
   "keywords": [],
   "author": "",
