@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "nodemon --quiet dist/index.js",
     "dev": "tsup src/index.ts --format esm --watch",
-    "start": "node --quiet dist/index.js",
+    "start": "node dist/index.js",
     "build": "tsup src/index.ts --format esm"
   },
   "bin": {
@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "chalk": "^5.4.1",
+    "commander": "^13.0.0",
+    "inquirer": "^12.3.0",
     "nanospinner": "^1.2.2"
   }
 }
