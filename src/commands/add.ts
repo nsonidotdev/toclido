@@ -7,56 +7,58 @@ import inquirer from 'inquirer';
 import type { Todo } from '../types'
 import { nanoid } from 'nanoid';
 import { TodoPriority } from "../enums";
+import { handleError } from '../lib';
 
 type AddOptions = {
     title?: string;
     completed?: boolean;
     priority?: TodoPriority;
-}
+};
 
 const addTodoCommand = new Command("add")
     .description('Adds a todo')
-    .option('-t, --title <title>', 'Sets tasks priority')
+    .option('-t, --title <title>', 'Sets task title')
     .option('-c, --completed', 'Mark the item as completed')
-    .option('-p, --priority <priority>', 'Sets tasks priority', validatePriority)
-
+    .option('-p, --priority <priority>', 'Sets task priority', validatePriority);
 
 addTodoCommand
     .action(async (_, options) => {
+        console.log(chalk.blueBright("Initializing the 'Add Todo' command...\n"));
+
         const commandOptions = options.opts() as AddOptions;
 
+        // Collect user input with prompts
         const answers = await inquirer.prompt([
             {
-                message: `What do you wanna ${chalk.whiteBright("do?")}`,
+                message: `What do you want to ${chalk.whiteBright("do?")}`,
                 type: "input",
                 name: "title",
                 default: commandOptions.title,
                 validate: async (value) => {
                     await sleep();
-
                     return value.length > 5
                         ? true
-                        : "Todo length should include more then 5 characters";
-                }
+                        : `${chalk.red("Error:")} Todo length must be more than 5 characters.`;
+                },
             },
             {
-                message: `What is a ${chalk.red("priority")} of your this task`,
+                message: `What is the ${chalk.red("priority")} of this task?`,
                 name: "priority",
                 type: "list",
                 default: commandOptions.priority ?? TodoPriority.Medium,
                 choices: [
-                    { value: TodoPriority.Low, name: TodoPriority.Low, },
-                    { value: TodoPriority.Medium, name: TodoPriority.Medium, },
-                    { value: TodoPriority.High, name: TodoPriority.High, },
-                    { value: TodoPriority.Urgent, name: TodoPriority.Urgent, },
-                ]
+                    { value: TodoPriority.Low, name: TodoPriority.Low },
+                    { value: TodoPriority.Medium, name: TodoPriority.Medium },
+                    { value: TodoPriority.High, name: TodoPriority.High },
+                    { value: TodoPriority.Urgent, name: TodoPriority.Urgent },
+                ],
             },
             {
                 message: `Is this task ${chalk.green("completed")}?`,
                 name: "completed",
                 default: !!commandOptions.completed,
                 type: "confirm",
-            }
+            },
         ]);
 
         const todosPath = path.join(process.cwd(), "./todos.json");
@@ -67,25 +69,41 @@ addTodoCommand
             priority: answers.priority,
         } satisfies Todo;
 
-        try {
-            const todosJSON = await readFile(todosPath, 'utf-8');
-            const todos = JSON.parse(todosJSON);
-
-            if (!(todos instanceof Array)) {
-                throw new Error(`Can\'t parse your tasks. Try deleting all your tasks with \`${chalk.bgBlack.blue('toclido clear')}\` command`)
-            }
-
-            todos.push(newTodo);
-            await writeFile(todosPath, JSON.stringify(todos))
-        } catch (error) {
-            if (error?.code === "ENOENT") {
-                await writeFile(todosPath, JSON.stringify([newTodo]))
+        const { data: todosJSON, error: readTodosError } = await handleError(readFile(todosPath, 'utf-8'));
+        if (readTodosError) {
+            if (readTodosError.code === "ENOENT") {
+                console.log(chalk.yellow("No todos file found. Creating a new one...\n"));
+                const { error: writeTodosError } = await handleError(writeFile(todosPath, JSON.stringify([newTodo], null, 2)));
+                if (writeTodosError) {
+                    console.error(chalk.red("Error: Unable to create the todos file."));
+                } else {
+                    console.log(chalk.greenBright("Todo successfully added and new todos file created."));
+                }
             } else {
-                console.log(`Something went wrong: ${chalk.redBright(error.message)}`)
+                console.error(chalk.red(`Error reading todos file: ${readTodosError.message}`));
             }
 
+            return;
+        }
+        if (!todosJSON) return;
+
+        const { data: todos, error: todosParseError } = await handleError(() => JSON.parse(todosJSON));
+        if (todosParseError || !(todos instanceof Array)) {
+            console.error(chalk.red(`Error parsing todos file. It might be corrupted. Check the validity of the ${chalk.blue("todos.json")} file to a JSON format.`));
+            return;
+        }
+
+        todos.push(newTodo);
+
+        const { error: writeTodosError } = await handleError(writeFile(todosPath, JSON.stringify(todos, null, 2)));
+        if (writeTodosError) {
+            console.error(chalk.red("Error: Unable to save the updated todos."));
+        } else {
+            console.log(chalk.greenBright("\nTodo successfully added!"));
+            console.log(`${chalk.blue("Title:")} ${newTodo.title}`);
+            console.log(`${chalk.blue("Priority:")} ${newTodo.priority}`);
+            console.log(`${chalk.blue("Completed:")} ${newTodo.completed ? chalk.green("Yes") : chalk.red("No")}\n`);
         }
     });
 
-
-export { addTodoCommand }
+export { addTodoCommand };
