@@ -25,6 +25,7 @@
     "chalk": "^5.4.1",
     "commander": "^13.0.0",
     "inquirer": "^12.3.0",
+    "nanoid": "^5.0.9",
     "nanospinner": "^1.2.2"
   }
 }
