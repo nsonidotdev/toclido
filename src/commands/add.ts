@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { writeFile, readFile } from 'fs/promises';
 import path from 'path';
 import { sleep, validatePriority } from "../utils";
-import inquirer from 'inquirer';
+import enquirer from 'enquirer';
 import type { Todo } from '../types'
 import { nanoid } from 'nanoid';
 import { TodoPriority } from "../enums";
@@ -27,46 +27,58 @@ addTodoCommand
 
         const commandOptions = options.opts() as AddOptions;
 
-        // Collect user input with prompts
-        const answers = await inquirer.prompt([
-            {
-                message: `What do you want to ${chalk.whiteBright("do?")}`,
+        let title = commandOptions.title;
+        let priority = commandOptions.priority;
+        let completed = commandOptions.completed;
+
+        if (!title) {
+            const response = await enquirer.prompt<{ title: string }>({
                 type: "input",
+                message: `What do you want to ${chalk.whiteBright("do?")}`,
                 name: "title",
-                default: commandOptions.title,
                 validate: async (value) => {
                     await sleep();
                     return value.length > 5
                         ? true
                         : `${chalk.red("Error:")} Todo length must be more than 5 characters.`;
                 },
-            },
-            {
+            });
+
+            title = response.title
+        }
+
+        if (!priority) {
+            const response = await enquirer.prompt<{ priority: TodoPriority }>({
+                type: "select",
                 message: `What is the ${chalk.red("priority")} of this task?`,
                 name: "priority",
-                type: "list",
-                default: commandOptions.priority ?? TodoPriority.Medium,
                 choices: [
                     { value: TodoPriority.Low, name: TodoPriority.Low },
                     { value: TodoPriority.Medium, name: TodoPriority.Medium },
                     { value: TodoPriority.High, name: TodoPriority.High },
                     { value: TodoPriority.Urgent, name: TodoPriority.Urgent },
                 ],
-            },
-            {
+            });
+
+            priority = response.priority;
+        }
+
+        if (typeof completed === 'undefined') {
+            const response = await enquirer.prompt<{ completed: boolean }>({
+                type: "confirm",
                 message: `Is this task ${chalk.green("completed")}?`,
                 name: "completed",
-                default: !!commandOptions.completed,
-                type: "confirm",
-            },
-        ]);
+            })
+
+            completed = response.completed;
+        }
 
         const todosPath = path.join(process.cwd(), "./todos.json");
         const newTodo = {
             id: nanoid(),
-            title: answers.title,
-            completed: answers.completed,
-            priority: answers.priority,
+            title: title,
+            completed: completed,
+            priority: priority,
         } satisfies Todo;
 
         const { data: todosJSON, error: readTodosError } = await handleError(readFile(todosPath, 'utf-8'));
