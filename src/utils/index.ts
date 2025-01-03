@@ -69,4 +69,8 @@ export const readTodos = async (options?: ReadTodosOptions): Promise<Todo[] | un
     return todos as Todo[];
 }
 
+export const getTodoStatus = (options: { completed: boolean }) => {
+    return options.completed ? chalk.green("✔ Done") : chalk.red("✘ Pending");
+}
+
 export * from './validate';

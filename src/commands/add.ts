@@ -52,7 +52,7 @@ addTodoCommand
                 type: "select",
                 message: `What is the ${chalk.red("priority")} of this task?`,
                 name: "priority",
-                initial: TodoPriority.Medium,
+                initial: 1,
                 choices: [
                     { value: TodoPriority.Low, name: TodoPriority.Low },
                     { value: TodoPriority.Medium, name: TodoPriority.Medium },

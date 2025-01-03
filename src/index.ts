@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { addTodoCommand } from './commands/add';
 import { viewTodosCommand } from './commands/view';
+import { deleteTodoCommand } from './commands/delete';
 
 const program = new Command();
 
@@ -14,6 +15,7 @@ program
 program
   .addCommand(addTodoCommand)
   .addCommand(viewTodosCommand)
+  .addCommand(deleteTodoCommand)
 
 
 program.parse(process.argv);

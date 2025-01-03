@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { readTodos, stylePriority, validatePriority } from "../utils";
+import { getTodoStatus, readTodos, stylePriority, validatePriority } from "../utils";
 import { TodoPriority } from "../enums";
 import { handleError } from "../lib";
 import { readFile } from "fs/promises";
@@ -81,7 +81,7 @@ viewTodosCommand.action(async (_, options) => {
             bg: 'black',
         },
         content: filteredTodos.map((todo, index) => {
-            const status = todo.completed ? chalk.green("✔ Done") : chalk.red("✘ Pending");
+            const status = getTodoStatus({ completed: todo.completed });
             return `${chalk.bold(`${index + 1}. ${todo.title}`)}\nStatus: ${status} Priority: ${stylePriority(todo.priority)}\n\n---------------------------------------------------------`;
         }).join('\n\n'),
     });
