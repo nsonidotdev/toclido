@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { addTodoCommand } from './commands/add';
+import { viewTodosCommand } from './commands/view';
 
 const program = new Command();
 
@@ -12,6 +13,7 @@ program
 
 program
   .addCommand(addTodoCommand)
+  .addCommand(viewTodosCommand)
 
 
 program.parse(process.argv);

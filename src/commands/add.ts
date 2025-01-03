@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { writeFile, readFile } from 'fs/promises';
-import path from 'path';
+import { TODOS_PATH } from '../constants'
 import { sleep, validatePriority } from "../utils";
 import enquirer from 'enquirer';
 import type { Todo } from '../types'
@@ -52,6 +52,7 @@ addTodoCommand
                 type: "select",
                 message: `What is the ${chalk.red("priority")} of this task?`,
                 name: "priority",
+                initial: TodoPriority.Medium,
                 choices: [
                     { value: TodoPriority.Low, name: TodoPriority.Low },
                     { value: TodoPriority.Medium, name: TodoPriority.Medium },
@@ -73,7 +74,6 @@ addTodoCommand
             completed = response.completed;
         }
 
-        const todosPath = path.join(process.cwd(), "./todos.json");
         const newTodo = {
             id: nanoid(),
             title: title,
@@ -81,11 +81,11 @@ addTodoCommand
             priority: priority,
         } satisfies Todo;
 
-        const { data: todosJSON, error: readTodosError } = await handleError(readFile(todosPath, 'utf-8'));
+        const { data: todosJSON, error: readTodosError } = await handleError(readFile(TODOS_PATH, 'utf-8'));
         if (readTodosError) {
             if (readTodosError.code === "ENOENT") {
                 console.log(chalk.yellow("No todos file found. Creating a new one...\n"));
-                const { error: writeTodosError } = await handleError(writeFile(todosPath, JSON.stringify([newTodo], null, 2)));
+                const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify([newTodo], null, 2)));
                 if (writeTodosError) {
                     console.error(chalk.red("Error: Unable to create the todos file."));
                 } else {
@@ -107,7 +107,7 @@ addTodoCommand
 
         todos.push(newTodo);
 
-        const { error: writeTodosError } = await handleError(writeFile(todosPath, JSON.stringify(todos, null, 2)));
+        const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify(todos, null, 2)));
         if (writeTodosError) {
             console.error(chalk.red("Error: Unable to save the updated todos."));
         } else {
