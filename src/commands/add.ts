@@ -2,7 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import { writeFile, readFile } from 'fs/promises';
 import { TODOS_PATH } from '../constants'
-import { sleep, validatePriority } from "../utils";
+import { readTodos, sleep, validatePriority } from "../utils";
 import enquirer from 'enquirer';
 import type { Todo } from '../types'
 import { nanoid } from 'nanoid';
@@ -81,9 +81,8 @@ addTodoCommand
             priority: priority,
         } satisfies Todo;
 
-        const { data: todosJSON, error: readTodosError } = await handleError(readFile(TODOS_PATH, 'utf-8'));
-        if (readTodosError) {
-            if (readTodosError.code === "ENOENT") {
+        const todos = await readTodos({
+            onFileNotFound: async () => {
                 console.log(chalk.yellow("No todos file found. Creating a new one...\n"));
                 const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify([newTodo], null, 2)));
                 if (writeTodosError) {
@@ -91,20 +90,11 @@ addTodoCommand
                 } else {
                     console.log(chalk.greenBright("Todo successfully added and new todos file created."));
                 }
-            } else {
-                console.error(chalk.red(`Error reading todos file: ${readTodosError.message}`));
-            }
-
-            return;
-        }
-        if (!todosJSON) return;
-
-        const { data: todos, error: todosParseError } = await handleError(() => JSON.parse(todosJSON));
-        if (todosParseError || !(todos instanceof Array)) {
-            console.error(chalk.red(`Error parsing todos file. It might be corrupted. Check the validity of the ${chalk.blue("todos.json")} file to a JSON format.`));
-            return;
-        }
-
+            },
+            
+        });
+        if (!todos) return;
+        
         todos.push(newTodo);
 
         const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify(todos, null, 2)));

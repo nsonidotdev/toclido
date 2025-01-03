@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { stylePriority, validatePriority } from "../utils";
+import { readTodos, stylePriority, validatePriority } from "../utils";
 import { TodoPriority } from "../enums";
 import { handleError } from "../lib";
 import { readFile } from "fs/promises";
@@ -29,23 +29,13 @@ viewTodosCommand.action(async (_, options) => {
         return;
     }
 
-    const { data: todosJSON, error: readTodosError } = await handleError(readFile(TODOS_PATH, "utf-8"));
-    if (readTodosError) {
-        if (readTodosError.code === "ENOENT") {
+    
+    const todos = await readTodos({
+        onFileNotFound: async () => {
             console.log(chalk.yellow("You don't have any tasks \n"));
-        } else {
-            console.error(chalk.red(`Error reading todos file: ${readTodosError.message}`));
-        }
-
-        return;
-    }
-    if (!todosJSON) return;
-
-    const { data: todos, error: todosParseError } = await handleError<Todo[]>(() => JSON.parse(todosJSON));
-    if (todosParseError || !(todos instanceof Array)) {
-        console.error(chalk.red(`Error parsing todos file. It might be corrupted. Check the validity of the ${chalk.blue("todos.json")} file to a JSON format.`));
-        return;
-    }
+        }, 
+    });
+    if (!todos) return;
 
     const filteredTodos = todos.filter((todo) => {
         if ('priority' in commandOptions && commandOptions.priority !== todo.priority) {
