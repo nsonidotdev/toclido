@@ -75,10 +75,13 @@ checkTodoCommand.action(async (_, options) => {
                 name: "title",
                 // @ts-expect-error
                 limit: 10,
-                choices: filteredTasksByTitle.map(task => task.title)
+                choices: filteredTasksByTitle.map(task => ({
+                    message: highlightOccurrences({ content: task.title, targetText: commandOptions.title! }),
+                    value: task.title
+                }))
             });
 
-            targetTask = filteredTasksByTitle.find(task => task.title === title);
+            targetTask = filteredTasksByTitle.find(task => task.title );
         }
     }
 
