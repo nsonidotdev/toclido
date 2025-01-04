@@ -1,13 +1,10 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { writeFile, readFile } from 'fs/promises';
-import { TODOS_PATH } from '../constants'
-import { readTodos, sleep, validatePriority } from "../utils";
+import { readTodos, formatTodo, sleep, validatePriority, writeTodos } from "../utils";
 import enquirer from 'enquirer';
 import type { Todo } from '../types'
 import { nanoid } from 'nanoid';
 import { TodoPriority } from "../enums";
-import { handleError } from '../lib';
 
 type AddOptions = {
     title?: string;
@@ -84,7 +81,7 @@ addTodoCommand
         const todos = await readTodos({
             onFileNotFound: async () => {
                 console.log(chalk.yellow("No todos file found. Creating a new one...\n"));
-                const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify([newTodo], null, 2)));
+                const { error: writeTodosError } = await writeTodos([newTodo]);
                 if (writeTodosError) {
                     console.error(chalk.red("Error: Unable to create the todos file."));
                 } else {
@@ -97,14 +94,13 @@ addTodoCommand
         
         todos.push(newTodo);
 
-        const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify(todos, null, 2)));
+        const { error: writeTodosError } = await writeTodos(todos);
         if (writeTodosError) {
             console.error(chalk.red("Error: Unable to save the updated todos."));
         } else {
             console.log(chalk.greenBright("\nTodo successfully added!"));
-            console.log(`${chalk.blue("Title:")} ${newTodo.title}`);
-            console.log(`${chalk.blue("Priority:")} ${newTodo.priority}`);
-            console.log(`${chalk.blue("Completed:")} ${newTodo.completed ? chalk.green("Yes") : chalk.red("No")}\n`);
+            
+            console.log(formatTodo(newTodo));
         }
     });
 

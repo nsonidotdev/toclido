@@ -1,11 +1,8 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { getTodoStatus, highlightOccurrences, readTodos, stylePriority } from "../utils";
+import { highlightOccurrences, readTodos, writeTodos, getTodoStatus, formatTodo  } from "../utils";
 import { Todo } from "../types";
 import enquirer from "enquirer";
-import { handleError } from "../lib";
-import { TODOS_PATH } from "../constants";
-import { writeFile } from "fs/promises";
 
 type CheckTodoOptions = {
     completed?: boolean;
@@ -99,8 +96,7 @@ checkTodoCommand.action(async (_, options) => {
     }
     if (!targetTask) return;
 
-    const status = getTodoStatus({ completed: targetTask.completed });
-    console.log(`\n${chalk.bold(`${targetTask.title}`)}\nStatus: ${status} Priority: ${stylePriority(targetTask.priority)}\n`);
+    console.log(formatTodo(targetTask));
 
     if (commandOptions.completed) {
         targetTask.completed = true;
@@ -132,7 +128,7 @@ checkTodoCommand.action(async (_, options) => {
         return task;
     })
 
-    const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify(updatedTodos, null, 2)));
+    const { error: writeTodosError } = await writeTodos(updatedTodos);
     if (writeTodosError) {
         console.error(chalk.red("Error: Unable to save the updated todos."));
     } else {

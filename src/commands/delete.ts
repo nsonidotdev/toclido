@@ -1,10 +1,7 @@
 import { Command } from "commander";
-import { getTodoStatus, readTodos, stylePriority } from "../utils";
+import { readTodos, formatTodo, writeTodos } from "../utils";
 import chalk from "chalk";
 import enquirer from "enquirer";
-import { handleError } from "../lib";
-import { writeFile } from "fs/promises"
-import { TODOS_PATH } from "../constants";
 
 type DeleteTodoOptions = {
     title?: string;
@@ -36,6 +33,7 @@ deleteTodoCommand.action(async (_, options) => {
             type: "autocomplete",
             message: "Start typing title of a task you want to delete",
             name: "title",
+            // @ts-expect-error
             limit: 10,
             choices: todos.map(todo => todo.title),
         });
@@ -59,8 +57,7 @@ deleteTodoCommand.action(async (_, options) => {
         return;
     }
 
-    const status = getTodoStatus({ completed: taskToDelete.completed });
-    console.log(`\n${chalk.bold(`${taskToDelete.title}`)}\nStatus: ${status} Priority: ${stylePriority(taskToDelete.priority)}\n`);
+    console.log(formatTodo(taskToDelete));
 
     const { confirm } = await enquirer.prompt<{ confirm: "Yes" | "No" }>({
         type: "select",
@@ -75,7 +72,7 @@ deleteTodoCommand.action(async (_, options) => {
 
     if (confirm === "No") return;
     const newTodos = todos.filter(todo => todo.id !== taskToDelete.id);
-    const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify(newTodos, null, 2)));
+    const { error: writeTodosError } = await writeTodos(newTodos);
 
     if (writeTodosError) {
         console.error(chalk.red("Error: Unable to save the updated todos."));

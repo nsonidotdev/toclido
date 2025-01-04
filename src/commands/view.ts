@@ -1,11 +1,7 @@
 import { Command } from "commander";
-import { getTodoStatus, readTodos, stylePriority, validatePriority } from "../utils";
+import { formatTodo, readTodos, validatePriority } from "../utils";
 import { TodoPriority } from "../enums";
-import { handleError } from "../lib";
-import { readFile } from "fs/promises";
-import { TODOS_PATH } from '../constants'
 import chalk from "chalk";
-import { Todo } from "../types";
 import blessed from 'blessed';
 
 type ViewOptions = {
@@ -81,9 +77,8 @@ viewTodosCommand.action(async (_, options) => {
             bg: 'black',
         },
         content: filteredTodos.map((todo, index) => {
-            const status = getTodoStatus({ completed: todo.completed });
-            return `${chalk.bold(`${index + 1}. ${todo.title}`)}\nStatus: ${status} Priority: ${stylePriority(todo.priority)}\n\n---------------------------------------------------------`;
-        }).join('\n\n'),
+            return `${formatTodo(todo, { prefix: index + 1 + '. '})}`;
+        }).join('\n'),
     });
 
     blessed.box({
