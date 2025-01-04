@@ -81,7 +81,7 @@ checkTodoCommand.action(async (_, options) => {
                 }))
             });
 
-            targetTask = filteredTasksByTitle.find(task => task.title );
+            targetTask = filteredTasksByTitle.find(task => task.title === title);
         }
     }
 
@@ -117,7 +117,6 @@ checkTodoCommand.action(async (_, options) => {
             ]
         })
 
-        console.log(status)
         if (status === "Done") {
             targetTask.completed = true;
         } else if (status === "Pending") {
@@ -133,13 +132,11 @@ checkTodoCommand.action(async (_, options) => {
         return task;
     })
 
-    console.log(targetTask.completed)
-
     const { error: writeTodosError } = await handleError(writeFile(TODOS_PATH, JSON.stringify(updatedTodos, null, 2)));
     if (writeTodosError) {
         console.error(chalk.red("Error: Unable to save the updated todos."));
     } else {
-        console.log(chalk.greenBright(`\nTask "${chalk.blue(targetTask.title)}" now in status ${getTodoStatus({ completed: targetTask.completed })}`));
+        console.log(chalk.greenBright(`Task "${chalk.blue(targetTask.title)}" now in status ${getTodoStatus({ completed: targetTask.completed })}`));
     }
 })
 
