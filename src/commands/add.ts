@@ -5,6 +5,7 @@ import enquirer from 'enquirer';
 import type { Todo } from '../types'
 import { nanoid } from 'nanoid';
 import { TodoPriority, TodoStatus } from "../enums";
+import { promptPriority, promptStatus } from "../utils/prompts";
 
 type AddOptions = {
     title?: string;
@@ -33,6 +34,7 @@ addTodoCommand
                 type: "input",
                 message: `What do you want to ${chalk.whiteBright("do?")}`,
                 name: "title",
+                initial: "Hello",
                 validate: async (value) => {
                     await sleep();
                     return value.length > 5
@@ -45,35 +47,11 @@ addTodoCommand
         }
 
         if (!priority) {
-            const response = await enquirer.prompt<{ priority: TodoPriority }>({
-                type: "select",
-                message: `What is the ${chalk.red("priority")} of this task?`,
-                name: "priority",
-                initial: 1,
-                choices: [
-                    { value: TodoPriority.Low, name: TodoPriority.Low },
-                    { value: TodoPriority.Medium, name: TodoPriority.Medium },
-                    { value: TodoPriority.High, name: TodoPriority.High },
-                    { value: TodoPriority.Urgent, name: TodoPriority.Urgent },
-                ],
-            });
-
-            priority = response.priority;
+            priority = await promptPriority()
         }
 
         if (!status) {
-            const response = await enquirer.prompt<{ status: TodoStatus }>({
-                type: "select",
-                message: "Pick new status for a task?",
-                name: "status",
-                choices: Object.values(TodoStatus).map(status => ({
-                    message: formatTodoStatus(status),
-                    name: status,
-                    value: status,
-                }))
-            })
-
-            status = response.status;
+            status  = await promptStatus();
         }
 
         const newTodo = {

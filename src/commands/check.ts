@@ -2,8 +2,9 @@ import chalk from "chalk";
 import { Command } from "commander";
 import { readTodos, writeTodos, formatTodoStatus, formatTodo, findTodoByTitle, validateStatus } from "../utils";
 import { Todo } from "../types";
-import enquirer from "enquirer";
+import enquirer, { prompt } from "enquirer";
 import { TodoStatus } from "../enums";
+import { promptStatus } from "../utils/prompts";
 
 type CheckTodoOptions = {
     status?: TodoStatus;
@@ -51,17 +52,7 @@ checkTodoCommand.action(async (_, options) => {
     if (commandOptions.status) {
         targetTask.status = commandOptions.status;
     } else {
-        const { status } = await enquirer.prompt<{ status: TodoStatus }>({
-            type: "select",
-            message: "Pick new status for a task?",
-            name: "status",
-            choices: Object.values(TodoStatus).map(status => ({
-                message: formatTodoStatus(status),
-                name: status,
-                value: status,
-            }))
-        })
-
+        const status = await promptStatus();
         targetTask.status = status;
     }
 

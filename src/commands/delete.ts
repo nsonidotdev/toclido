@@ -3,6 +3,7 @@ import { readTodos, formatTodo, writeTodos, findTodoByTitle } from "../utils";
 import chalk from "chalk";
 import enquirer from "enquirer";
 import { Todo } from "../types";
+import { promptConfirm } from "../utils/prompts";
 
 type DeleteTodoOptions = {
     title?: string;
@@ -31,19 +32,6 @@ deleteTodoCommand.action(async (_, options) => {
         return;
     }
 
-    if (!commandOptions.id && !commandOptions.title) {
-        const answer = await enquirer.prompt<{ title: string }>({
-            type: "autocomplete",
-            message: "Start typing title of a task you want to delete",
-            name: "title",
-            // @ts-expect-error
-            limit: 10,
-            choices: todos.map(todo => todo.title),
-        });
-
-        commandOptions.title = answer.title;
-    }
-
     let targetTask: Todo | undefined;
 
     if (commandOptions.id) {
@@ -61,18 +49,10 @@ deleteTodoCommand.action(async (_, options) => {
 
     const shouldDelete = !!commandOptions.y;
     if (!shouldDelete) {
-        const { confirm } = await enquirer.prompt<{ confirm: "Yes" | "No" }>({
-            type: "select",
-            message: "Are you sure you want to delete this taks?",
-            name: "confirm",
-            initial: 0,
-            choices: [
-                "Yes",
-                "No"
-            ]
+        const isConfirmed = await promptConfirm({ 
+            message: `Are you sure you want to ${chalk.red("delete")} this taks?`
         })
-    
-        if (confirm === "No") return;
+        if (!isConfirmed) return;
     }
     
     const newTodos = todos.filter(todo => todo.id !== targetTask.id);
