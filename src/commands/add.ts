@@ -1,21 +1,21 @@
 import { Command } from "commander";
 import chalk from "chalk";
-import { readTodos, formatTodo, sleep, validatePriority, writeTodos } from "../utils";
+import { readTodos, formatTodo, sleep, validatePriority, writeTodos, formatTodoStatus, validateStatus } from "../utils";
 import enquirer from 'enquirer';
 import type { Todo } from '../types'
 import { nanoid } from 'nanoid';
-import { TodoPriority } from "../enums";
+import { TodoPriority, TodoStatus } from "../enums";
 
 type AddOptions = {
     title?: string;
-    completed?: boolean;
+    status?: TodoStatus;
     priority?: TodoPriority;
 };
 
 const addTodoCommand = new Command("add")
     .description('Adds a todo')
     .option('-t, --title <title>', 'Sets task title')
-    .option('-c, --completed', 'Mark the item as completed')
+    .option('-s, --status <status>', 'Sets status of a task', validateStatus)
     .option('-p, --priority <priority>', 'Sets task priority', validatePriority);
 
 addTodoCommand
@@ -26,7 +26,7 @@ addTodoCommand
 
         let title = commandOptions.title;
         let priority = commandOptions.priority;
-        let completed = commandOptions.completed;
+        let status = commandOptions.status;
 
         if (!title) {
             const response = await enquirer.prompt<{ title: string }>({
@@ -61,21 +61,26 @@ addTodoCommand
             priority = response.priority;
         }
 
-        if (typeof completed === 'undefined') {
-            const response = await enquirer.prompt<{ completed: boolean }>({
-                type: "confirm",
-                message: `Is this task ${chalk.green("completed")}?`,
-                name: "completed",
+        if (!status) {
+            const response = await enquirer.prompt<{ status: TodoStatus }>({
+                type: "select",
+                message: "Pick new status for a task?",
+                name: "status",
+                choices: Object.values(TodoStatus).map(status => ({
+                    message: formatTodoStatus(status),
+                    name: status,
+                    value: status,
+                }))
             })
 
-            completed = response.completed;
+            status = response.status;
         }
 
         const newTodo = {
             id: nanoid(),
-            title: title,
-            completed: completed,
-            priority: priority,
+            title,
+            status,
+            priority,
         } satisfies Todo;
 
         const todos = await readTodos({
@@ -88,10 +93,10 @@ addTodoCommand
                     console.log(chalk.greenBright("Todo successfully added and new todos file created."));
                 }
             },
-            
+
         });
         if (!todos) return;
-        
+
         todos.push(newTodo);
 
         const { error: writeTodosError } = await writeTodos(todos);
@@ -99,7 +104,6 @@ addTodoCommand
             console.error(chalk.red("Error: Unable to save the updated todos."));
         } else {
             console.log(chalk.greenBright("\nTodo successfully added!"));
-            
             console.log(formatTodo(newTodo));
         }
     });

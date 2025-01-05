@@ -2,10 +2,10 @@
 
 import chalk from "chalk";
 import { Todo } from "../types";
-import { TodoPriority } from "../enums";
+import { TodoPriority, TodoStatus } from "../enums";
 
 export const formatTodo = (todo: Todo, options?: { prefix?: string }) => {
-    const status = getTodoStatus({ completed: todo.completed })
+    const status = formatTodoStatus(todo.status)
     return `\n${chalk.bold(`${options?.prefix ?? ""}${todo.title}`)}\nStatus: ${status} Priority: ${stylePriority(todo.priority)}\n`;
 }
 
@@ -25,6 +25,15 @@ export const stylePriority = (priority: TodoPriority, displayText?: string): str
     }
 }
 
-export const getTodoStatus = (options: { completed: boolean }) => {
-    return options.completed ? chalk.green("✔ Done") : chalk.red("✘ Pending");
+export const formatTodoStatus = (status: TodoStatus) => {
+    switch (status) {
+        case TodoStatus.Todo:
+            return chalk.yellowBright("Todo");
+        case TodoStatus.InProgress:
+            return chalk.blue("In Progress");
+        case TodoStatus.Done:
+            return chalk.green("Done");
+        default:
+            return chalk.gray("Unknown Status");
+    }
 }

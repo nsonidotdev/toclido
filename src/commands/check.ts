@@ -1,29 +1,24 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { highlightOccurrences, readTodos, writeTodos, getTodoStatus, formatTodo, findTodoByTitle  } from "../utils";
+import { readTodos, writeTodos, formatTodoStatus, formatTodo, findTodoByTitle, validateStatus } from "../utils";
 import { Todo } from "../types";
 import enquirer from "enquirer";
+import { TodoStatus } from "../enums";
 
 type CheckTodoOptions = {
-    completed?: boolean;
-    incompleted?: boolean;
+    status?: TodoStatus;
     id?: string;
     title?: string;
 }
 
 const checkTodoCommand = new Command("check")
     .description("Edits a task")
-    .option("-c, --completed", "Sets task as completed")
-    .option("-i, --incompleted", "Sets task as incompleted")
+    .option("-s, --status <status>", "Sets task as completed", validateStatus)
     .option("-t, --title <title>", "Searches todo by title")
     .option("--id <identifier>", "Searches todo by id")
 
 checkTodoCommand.action(async (_, options) => {
-    const commandOptions = options.opts() as CheckTodoOptions;    
-
-    if (typeof commandOptions.completed === "boolean" && typeof commandOptions.incompleted === "boolean") {
-        console.error(chalk.red("Insufficient options. You should either mark task as completed or as incompleted, but not both"))
-    }
+    const commandOptions = options.opts() as CheckTodoOptions;
 
     if (commandOptions.id && commandOptions.title) {
         console.error(chalk.red("You can't search a task by id and title at the same time"))
@@ -53,26 +48,21 @@ checkTodoCommand.action(async (_, options) => {
 
     console.log(formatTodo(targetTask));
 
-    if (commandOptions.completed) {
-        targetTask.completed = true;
-    } else if (commandOptions.incompleted) {
-        targetTask.completed = false;
+    if (commandOptions.status) {
+        targetTask.status = commandOptions.status;
     } else {
-        const { status } = await enquirer.prompt<{ status: "Done" | "Pending" }>({
+        const { status } = await enquirer.prompt<{ status: TodoStatus }>({
             type: "select",
             message: "Pick new status for a task?",
             name: "status",
-            choices: [
-                "Done",
-                "Pending"
-            ]
+            choices: Object.values(TodoStatus).map(status => ({
+                message: formatTodoStatus(status),
+                name: status,
+                value: status,
+            }))
         })
 
-        if (status === "Done") {
-            targetTask.completed = true;
-        } else if (status === "Pending") {
-            targetTask.completed = false;
-        }
+        targetTask.status = status;
     }
 
     const updatedTodos = todos.map(task => {
@@ -87,7 +77,7 @@ checkTodoCommand.action(async (_, options) => {
     if (writeTodosError) {
         console.error(chalk.red("Error: Unable to save the updated todos."));
     } else {
-        console.log(chalk.greenBright(`Task "${chalk.blue(targetTask.title)}" now in status ${getTodoStatus({ completed: targetTask.completed })}`));
+        console.log(chalk.greenBright(`Task "${chalk.blue(targetTask.title)}" now in status ${formatTodoStatus(targetTask.status)}`));
     }
 })
 

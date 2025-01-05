@@ -1,30 +1,22 @@
 import { Command } from "commander";
-import { formatTodo, readTodos, validatePriority } from "../utils";
-import { TodoPriority } from "../enums";
+import { formatTodo, readTodos, validatePriority, validateStatus } from "../utils";
+import { TodoPriority, TodoStatus } from "../enums";
 import chalk from "chalk";
 import blessed from 'blessed';
 
 type ViewOptions = {
-    completed?: boolean;
-    incompleted?: boolean;
+    status?: TodoStatus;
     priority?: TodoPriority;
 }
 
 const viewTodosCommand = new Command('view')
     .description('Adds a todo')
-    .option('-c, --completed', 'Shows only completed tasks')
-    .option('-i, --incompleted', 'Shows only incompleted tasks')
+    .option('-s, --status <status>', 'Shows tasks with specified status', validateStatus)
     .option('-p, --priority <priority>', 'Shows tasks with specified priority', validatePriority);
 
 
 viewTodosCommand.action(async (_, options) => {
     const commandOptions = options.opts() as ViewOptions;
-
-    if (typeof commandOptions.completed === "boolean" && typeof commandOptions.incompleted === "boolean") {
-        console.error(chalk.red("You can view either completed or incompleted tasks, if you want to view both don't path -i and -c options"))
-        return;
-    }
-
     
     const todos = await readTodos({
         onFileNotFound: async () => {
@@ -34,17 +26,14 @@ viewTodosCommand.action(async (_, options) => {
     if (!todos) return;
 
     const filteredTodos = todos.filter((todo) => {
-        if ('priority' in commandOptions && commandOptions.priority !== todo.priority) {
+        if (commandOptions.priority && commandOptions.priority !== todo.priority) {
             return false;
         }
 
-        if (typeof commandOptions.completed === "boolean" && commandOptions.completed && !todo.completed) {
+        if (commandOptions.status && commandOptions.status !== todo.status) {
             return false;
         }
-
-        if (typeof commandOptions.incompleted === "boolean" && commandOptions.incompleted && todo.completed) {
-            return false;
-        }
+ 
 
         return true
     })
