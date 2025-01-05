@@ -21,6 +21,7 @@ fakeCommand.action(async (_, options) => {
         title: faker.lorem.words({ min: 3, max: 10 }),
         priority: faker.helpers.arrayElement(Object.values(TodoPriority)),
         status: faker.helpers.arrayElement(Object.values(TodoStatus)),
+        createdAt: faker.date.recent({ days: 50 }),
     } satisfies Todo));
 
     const todos = await readTodos();    

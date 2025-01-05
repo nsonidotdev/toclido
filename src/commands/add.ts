@@ -59,6 +59,7 @@ addTodoCommand
             title,
             status,
             priority,
+            createdAt: new Date()
         } satisfies Todo;
 
         const todos = await readTodos({
