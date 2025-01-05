@@ -5,5 +5,5 @@ export type Todo = {
     title: string;
     priority: TodoPriority;
     status: TodoStatus;
-    createdAt: Date;
+    createdAt: Date | string;
 }

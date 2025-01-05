@@ -3,10 +3,22 @@
 import chalk from "chalk";
 import { Todo } from "../types";
 import { TodoPriority, TodoStatus } from "../enums";
+import { format } from 'date-fns';
 
-export const formatTodo = (todo: Todo, options?: { prefix?: string }) => {
+export const formatDate = (createdAt: string | Date): string => {
+    return format(createdAt, 'yyyy-MM-dd HH:mm'); 
+}
+
+type FormatTodoOptions = { prefix?: string, showCreatedAt?: boolean }
+export const formatTodo = (todo: Todo, options?: FormatTodoOptions) => {
     const status = formatTodoStatus(todo.status)
-    return `\n${chalk.bold(`${options?.prefix ?? ""}${todo.title}`)}\nStatus: ${status} Priority: ${formatPriority(todo.priority)}\n`;
+    const { prefix, showCreatedAt } = {
+        showCreatedAt: true,
+        prefix: "",
+        ...(options ?? {}),
+    } satisfies Required<FormatTodoOptions>;
+
+    return `\n${chalk.bold(`${prefix}${todo.title}`)} ${showCreatedAt ? formatDate(todo.createdAt) : ""}\nStatus: ${status} Priority: ${formatPriority(todo.priority)}\n`;
 }
 
 export const formatPriority = (priority: TodoPriority, displayText?: string): string => {

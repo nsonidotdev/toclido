@@ -28,6 +28,7 @@
     "blessed": "^0.1.81",
     "chalk": "^5.4.1",
     "commander": "^13.0.0",
+    "date-fns": "^4.1.0",
     "enquirer": "^2.4.1",
     "nanoid": "^5.0.9",
     "nanospinner": "^1.2.2"

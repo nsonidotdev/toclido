@@ -83,7 +83,7 @@ addTodoCommand
             console.error(chalk.red("Error: Unable to save the updated todos."));
         } else {
             console.log(chalk.greenBright("\nTodo successfully added!"));
-            console.log(formatTodo(newTodo));
+            console.log(formatTodo(newTodo, { showCreatedAt: false }));
         }
     });
 
