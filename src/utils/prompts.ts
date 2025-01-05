@@ -29,8 +29,7 @@ export const promptStatus = async (options?: BasePromptOptions): Promise<TodoSta
         message: options?.message ?? "Pick a status for the task",
         name: "status",
         choices: Object.values(TodoStatus).map(status => ({
-            message: formatTodoStatus(status),
-            name: status,
+            name: formatTodoStatus(status),
             value: status,
         }))
     })
@@ -45,8 +44,7 @@ export const promptPriority = async (options?: BasePromptOptions): Promise<TodoP
         name: "priority",
         initial: 1,
         choices: Object.values(TodoPriority).map(status => ({
-            message: formatPriority(status),
-            name: status,
+            name: formatPriority(status),
             value: status,
         })),
     });

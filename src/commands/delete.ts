@@ -26,7 +26,7 @@ deleteTodoCommand.action(async (_, options) => {
 
     const todos = await readTodos();
     if (!todos) return;
-  
+
     if (!todos.length) {
         console.log(chalk.yellow("You don't have any tasks"))
         return;
@@ -42,19 +42,21 @@ deleteTodoCommand.action(async (_, options) => {
         }
     }
 
-    targetTask = await findTodoByTitle({ todos, searchStr: commandOptions.title })
+    if (!targetTask) {
+        targetTask = await findTodoByTitle({ todos, searchStr: commandOptions.title })
+    }
     if (!targetTask) return;
 
     console.log(formatTodo(targetTask));
 
     const shouldDelete = !!commandOptions.y;
     if (!shouldDelete) {
-        const isConfirmed = await promptConfirm({ 
+        const isConfirmed = await promptConfirm({
             message: `Are you sure you want to ${chalk.red("delete")} this taks?`
         })
         if (!isConfirmed) return;
     }
-    
+
     const newTodos = todos.filter(todo => todo.id !== targetTask.id);
     const { error: writeTodosError } = await writeTodos(newTodos);
 
