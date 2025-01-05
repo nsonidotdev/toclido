@@ -1,8 +1,8 @@
-import { TodoPriority } from "./enums";
+import { TodoPriority, TodoStatus } from "./enums";
 
 export type Todo = {
     id: string;
     title: string;
     priority: TodoPriority;
-    completed: boolean;
+    status: TodoStatus;
 }
