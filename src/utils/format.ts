@@ -6,7 +6,7 @@ import { TodoPriority } from "../enums";
 
 export const formatTodo = (todo: Todo, options?: { prefix?: string }) => {
     const status = getTodoStatus({ completed: todo.completed })
-    return `\n${chalk.bold(`${options?.prefix}${todo.title}`)}\nStatus: ${status} Priority: ${stylePriority(todo.priority)}\n`;
+    return `\n${chalk.bold(`${options?.prefix ?? ""}${todo.title}`)}\nStatus: ${status} Priority: ${stylePriority(todo.priority)}\n`;
 }
 
 export const stylePriority = (priority: TodoPriority, displayText?: string): string => {
