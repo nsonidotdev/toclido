@@ -6,12 +6,14 @@ import { Todo } from "../types";
 
 type DeleteTodoOptions = {
     title?: string;
+    y?: boolean;
     id?: string;
 }
 
 const deleteTodoCommand = new Command("delete")
     .description("Deletes a task")
     .option("-t, --title <title>", "Deletes todo by title")
+    .option("-y", "Delete task without confirmation")
     .option("--id <identifier>", "Deletes todo by id")
 
 deleteTodoCommand.action(async (_, options) => {
@@ -57,18 +59,22 @@ deleteTodoCommand.action(async (_, options) => {
 
     console.log(formatTodo(targetTask));
 
-    const { confirm } = await enquirer.prompt<{ confirm: "Yes" | "No" }>({
-        type: "select",
-        message: "Are you sure you want to delete this taks?",
-        name: "confirm",
-        initial: 0,
-        choices: [
-            "Yes",
-            "No"
-        ]
-    })
-
-    if (confirm === "No") return;
+    const shouldDelete = !!commandOptions.y;
+    if (!shouldDelete) {
+        const { confirm } = await enquirer.prompt<{ confirm: "Yes" | "No" }>({
+            type: "select",
+            message: "Are you sure you want to delete this taks?",
+            name: "confirm",
+            initial: 0,
+            choices: [
+                "Yes",
+                "No"
+            ]
+        })
+    
+        if (confirm === "No") return;
+    }
+    
     const newTodos = todos.filter(todo => todo.id !== targetTask.id);
     const { error: writeTodosError } = await writeTodos(newTodos);
 
