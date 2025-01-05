@@ -5,6 +5,7 @@ import { addTodoCommand } from './commands/add';
 import { viewTodosCommand } from './commands/view';
 import { deleteTodoCommand } from './commands/delete';
 import { checkTodoCommand } from './commands/check';
+import { clearTodosCommand } from './commands/clear';
 
 const program = new Command();
 
@@ -18,6 +19,7 @@ program
   .addCommand(viewTodosCommand)
   .addCommand(deleteTodoCommand)
   .addCommand(checkTodoCommand)
+  .addCommand(clearTodosCommand)
 
 
 program.parse(process.argv);
