@@ -1,7 +1,8 @@
 import { Command } from "commander";
-import { readTodos, formatTodo, writeTodos } from "../utils";
+import { readTodos, formatTodo, writeTodos, findTodoByTitle } from "../utils";
 import chalk from "chalk";
 import enquirer from "enquirer";
+import { Todo } from "../types";
 
 type DeleteTodoOptions = {
     title?: string;
@@ -41,23 +42,20 @@ deleteTodoCommand.action(async (_, options) => {
         commandOptions.title = answer.title;
     }
 
-    const taskToDelete = todos.find(todo => {
-        if (commandOptions.title) {
-            return todo.title.includes(commandOptions.title);
-        }
+    let targetTask: Todo | undefined;
 
-        if (commandOptions.id) {
-            return todo.id === commandOptions.id;
+    if (commandOptions.id) {
+        targetTask = todos.find(task => task.id === commandOptions.id);
+        if (!targetTask) {
+            console.log(chalk.yellow("No tasks match your filter criteria."));
+            return;
         }
-
-        return false;
-    });
-    if (!taskToDelete) {
-        console.log(chalk.yellow("No tasks match your filter criteria."));
-        return;
     }
 
-    console.log(formatTodo(taskToDelete));
+    targetTask = await findTodoByTitle({ todos, searchStr: commandOptions.title })
+    if (!targetTask) return;
+
+    console.log(formatTodo(targetTask));
 
     const { confirm } = await enquirer.prompt<{ confirm: "Yes" | "No" }>({
         type: "select",
@@ -71,13 +69,13 @@ deleteTodoCommand.action(async (_, options) => {
     })
 
     if (confirm === "No") return;
-    const newTodos = todos.filter(todo => todo.id !== taskToDelete.id);
+    const newTodos = todos.filter(todo => todo.id !== targetTask.id);
     const { error: writeTodosError } = await writeTodos(newTodos);
 
     if (writeTodosError) {
         console.error(chalk.red("Error: Unable to save the updated todos."));
     } else {
-        console.log(chalk.greenBright(`\nTaks "${chalk.blue(taskToDelete.title)}" deleted successfully!`));
+        console.log(chalk.greenBright(`\nTaks "${chalk.blue(targetTask.title)}" deleted successfully!`));
     }
 })
 

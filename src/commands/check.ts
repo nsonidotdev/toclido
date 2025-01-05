@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import { Command } from "commander";
-import { highlightOccurrences, readTodos, writeTodos, getTodoStatus, formatTodo  } from "../utils";
+import { highlightOccurrences, readTodos, writeTodos, getTodoStatus, formatTodo, findTodoByTitle  } from "../utils";
 import { Todo } from "../types";
 import enquirer from "enquirer";
 
@@ -48,52 +48,7 @@ checkTodoCommand.action(async (_, options) => {
         }
     }
 
-    if (!targetTask && commandOptions.title) {
-        if (commandOptions.title.length < 3) {
-            console.error(chalk.red("Title filter option should include more than 2 characters"))
-            return;
-        }
-
-        const filteredTasksByTitle = todos.filter(task => {
-            return task.title.toLowerCase().includes(commandOptions.title!.toLowerCase())
-        })
-
-        if (!filteredTasksByTitle.length) {
-            console.log(chalk.yellow("No tasks match your filter criteria."));
-            return;
-        } else if (filteredTasksByTitle.length === 1) {
-            targetTask = filteredTasksByTitle[0];
-        }
-
-        if (!targetTask) {
-            const { title } = await enquirer.prompt<{ title: string }>({
-                type: "select",
-                message: "Pick a task you meant",
-                name: "title",
-                // @ts-expect-error
-                limit: 10,
-                choices: filteredTasksByTitle.map(task => ({
-                    message: highlightOccurrences({ content: task.title, targetText: commandOptions.title! }),
-                    value: task.title
-                }))
-            });
-
-            targetTask = filteredTasksByTitle.find(task => task.title === title);
-        }
-    }
-
-    if (!targetTask) {
-        const { title } = await enquirer.prompt<{ title: string }>({
-            type: "autocomplete",
-            message: "Start typing title of a task you want to delete",
-            name: "title",
-            // @ts-expect-error
-            limit: 10,
-            choices: todos.map(todo => todo.title),
-        });
-
-        targetTask = todos.find(task => task.title === title);
-    }
+    targetTask = await findTodoByTitle({ todos, searchStr: commandOptions.title })
     if (!targetTask) return;
 
     console.log(formatTodo(targetTask));
